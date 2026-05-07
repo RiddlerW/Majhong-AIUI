@@ -21,7 +21,9 @@ export default {
     mode: 'listen',
     bestSuggestion: null,
     alternatives: [],
-    listenTiles: []
+    listenTiles: [],
+    dingque: '',
+    dingqueName: ''
   },
   onLoad() {
     var app = getApp();
@@ -29,16 +31,26 @@ export default {
     var pengTiles = (app && app.globalData.pengTiles) || [];
     var gangTiles = (app && app.globalData.gangTiles) || [];
     var ruleType = (app && app.globalData.ruleType) || wx.getStorageSync('ruleType') || 'xz';
+    var dingque = (app && app.globalData.dingque) || wx.getStorageSync('dingque') || '';
 
     var handCount = handTiles.length;
-    this.setData({ handCount: handCount });
+    var dingqueName = '';
+    if (dingque === 'wan') dingqueName = '万';
+    else if (dingque === 'tiao') dingqueName = '条';
+    else if (dingque === 'tong') dingqueName = '筒';
+
+    this.setData({ 
+      handCount: handCount,
+      dingque: dingque,
+      dingqueName: dingqueName
+    });
 
     if (handCount === 13) {
       this.setData({ mode: 'listen' });
       this.calculateListening(handTiles, pengTiles, gangTiles, ruleType);
     } else if (handCount === 14) {
       this.setData({ mode: 'suggest' });
-      this.calculateSuggestion(handTiles, pengTiles, gangTiles, ruleType);
+      this.calculateSuggestion(handTiles, pengTiles, gangTiles, ruleType, dingque);
     } else {
       this.setData({
         mode: 'error',
@@ -68,10 +80,15 @@ export default {
 
     this.setData({ listenTiles: listenResult });
   },
-  calculateSuggestion(handTiles, pengTiles, gangTiles, ruleType) {
+  calculateSuggestion(handTiles, pengTiles, gangTiles, ruleType, dingque) {
     var suggestions = [];
     var count = C.tilesToCount(handTiles);
     var range = C.getRuleTileRange(ruleType);
+
+    var dingqueRange = null;
+    if (dingque === 'wan') dingqueRange = { start: 0, end: 8 };
+    else if (dingque === 'tiao') dingqueRange = { start: 9, end: 17 };
+    else if (dingque === 'tong') dingqueRange = { start: 18, end: 26 };
 
     for (var i = 0; i < C.TILE_COUNT; i++) {
       if (count[i] <= 0) continue;
@@ -92,17 +109,26 @@ export default {
       count[i]++;
 
       if (listenForThis.length > 0) {
+        var isDingque = false;
+        if (dingqueRange && i >= dingqueRange.start && i <= dingqueRange.end) {
+          isDingque = true;
+        }
         suggestions.push({
           discardIndex: i,
           discardName: C.getTileShortName(i),
           listenTiles: listenForThis,
           listenCount: listenForThis.length,
-          listenNames: listenForThis.map(function(t) { return t.name; }).join(' ')
+          listenNames: listenForThis.map(function(t) { return t.name; }).join(' '),
+          isDingque: isDingque
         });
       }
     }
 
-    suggestions.sort(function(a, b) { return b.listenCount - a.listenCount; });
+    suggestions.sort(function(a, b) {
+      if (a.isDingque && !b.isDingque) return -1;
+      if (!a.isDingque && b.isDingque) return 1;
+      return b.listenCount - a.listenCount;
+    });
 
     var best = suggestions.length > 0 ? suggestions[0] : null;
     var alts = suggestions.length > 1 ? suggestions.slice(1) : [];
@@ -170,6 +196,10 @@ export default {
 </script>
 <page>
   <view class="container">
+    <view ink:if="{{dingqueName}}" class="dingque-badge">
+      <text class="dingque-text">定缺: {{dingqueName}}</text>
+    </view>
+
     <view ink:if="{{mode === 'error'}}">
       <text class="title">⚠️ 牌数异常</text>
       <text class="error-text">当前手牌 {{handCount}} 张，需要13或14张</text>
@@ -189,6 +219,7 @@ export default {
     <view ink:if="{{mode === 'suggest'}}">
       <text class="title">🀄 出牌建议</text>
       <view class="best-card" ink:if="{{bestSuggestion}}">
+        <view ink:if="{{bestSuggestion.isDingque}}" class="dingque-tag">定缺必打</view>
         <text class="best-label">建议打</text>
         <text class="best-tile">{{bestSuggestion.discardName}}</text>
         <text class="best-listen">听: {{bestSuggestion.listenNames}}</text>
@@ -196,6 +227,7 @@ export default {
       <view class="alt-list" ink:if="{{alternatives.length > 0}}">
         <text class="alt-title">其他选择</text>
         <view ink:for="{{alternatives}}" class="alt-item">
+          <text ink:if="{{item.isDingque}}" class="dingque-mark">*</text>
           <text class="alt-text">打{{item.discardName}} → 听{{item.listenNames}}</text>
         </view>
       </view>
@@ -216,6 +248,17 @@ export default {
   background-color: #000;
   height: 100vh;
   box-sizing: border-box;
+}
+.dingque-badge {
+  margin-bottom: 12px;
+  padding: 4px 12px;
+  background-color: rgba(255, 165, 0, 0.2);
+  border-radius: 8px;
+  align-self: flex-start;
+}
+.dingque-text {
+  font-size: 14px;
+  color: #FFA500;
 }
 .title {
   font-size: 22px;
@@ -256,6 +299,18 @@ export default {
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
+  position: relative;
+}
+.dingque-tag {
+  position: absolute;
+  top: -10px;
+  right: 16px;
+  background-color: #FFA500;
+  color: #000;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
 }
 .best-label {
   font-size: 14px;
@@ -285,6 +340,13 @@ export default {
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+}
+.dingque-mark {
+  color: #FFA500;
+  font-size: 16px;
+  margin-right: 8px;
 }
 .alt-text {
   font-size: 14px;
