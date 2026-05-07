@@ -8,7 +8,7 @@
 
   var TILE_COUNT = 34;
 
-  function calculateShanten(tiles, meldCount) {
+  function calculateShanten(tiles, meldCount, ruleType) {
     meldCount = meldCount || 0;
     var count = new Array(TILE_COUNT).fill(0);
     for (var i = 0; i < tiles.length; i++) {
@@ -16,15 +16,22 @@
         count[tiles[i]]++;
       }
     }
-    return calculateShantenFromCount(count, meldCount);
+    return calculateShantenFromCount(count, meldCount, ruleType);
   }
 
-  function calculateShantenFromCount(count, meldCount) {
+  function calculateShantenFromCount(count, meldCount, ruleType) {
     meldCount = meldCount || 0;
     var shantenStandard = _shantenStandardFromCount(count, meldCount);
-    var shantenChiitoi = _shantenChiitoiFromCount(count);
-    var shantenKokushi = _shantenKokushiFromCount(count);
-    return Math.min(shantenStandard, shantenChiitoi, shantenKokushi);
+    var minShanten = shantenStandard;
+    if (ruleType !== 'xz' && ruleType !== 'xl') {
+      var shantenChiitoi = _shantenChiitoiFromCount(count);
+      var shantenKokushi = _shantenKokushiFromCount(count);
+      minShanten = Math.min(minShanten, shantenChiitoi, shantenKokushi);
+    } else {
+      var shantenChiitoi = _shantenChiitoiFromCount(count);
+      minShanten = Math.min(minShanten, shantenChiitoi);
+    }
+    return minShanten;
   }
 
   function _shantenStandardFromCount(count, meldCount) {
