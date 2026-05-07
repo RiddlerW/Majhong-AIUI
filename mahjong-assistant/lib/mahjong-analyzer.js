@@ -237,7 +237,10 @@
     else if (dingque === 'tiao') analysis.dingqueName = '条';
     else if (dingque === 'tong') analysis.dingqueName = '筒';
 
-    if (handTiles.length === 13) {
+    var listenHandCount = 13 - meldCount * 3;
+    var drawnHandCount = 14 - meldCount * 3;
+
+    if (handTiles.length === listenHandCount) {
       if (currentShanten === -1) {
         analysis.mode = 'win';
       } else if (currentShanten === 0) {
@@ -251,7 +254,7 @@
         analysis.acceptanceTiles = acceptance.tiles;
         analysis.totalRemaining = acceptance.totalRemaining;
       }
-    } else if (handTiles.length === 14) {
+    } else if (handTiles.length === drawnHandCount) {
       if (currentShanten === -1) {
         analysis.mode = 'win';
         if (F) {
@@ -268,6 +271,7 @@
       }
     } else {
       analysis.mode = 'error';
+      analysis.errorDetail = '手牌' + handTiles.length + '张，期望' + listenHandCount + '张(听牌)或' + drawnHandCount + '张(打牌)';
     }
 
     return analysis;

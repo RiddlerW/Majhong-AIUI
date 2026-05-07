@@ -27,7 +27,8 @@ export default {
     listenTiles: [],
     dingque: '',
     dingqueName: '',
-    fanResult: null
+    fanResult: null,
+    errorDetail: ''
   },
   onLoad() {
     var app = getApp();
@@ -49,7 +50,8 @@ export default {
       listenTiles: analysis.listenTiles,
       dingque: analysis.dingque,
       dingqueName: analysis.dingqueName,
-      fanResult: analysis.fanResult || null
+      fanResult: analysis.fanResult || null,
+      errorDetail: analysis.errorDetail || ''
     });
   },
   nextRound() {
@@ -68,7 +70,7 @@ export default {
 
     <view ink:if="{{mode === 'error'}}">
       <text class="title">⚠️ 牌数异常</text>
-      <text class="error-text">当前手牌 {{handCount}} 张，需要13或14张</text>
+      <text class="error-text">当前手牌 {{handCount}} 张，{{errorDetail || '数量异常'}}</text>
       <button class="action-btn primary" bindtap="nextRound">重新拍照</button>
     </view>
 
