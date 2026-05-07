@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/camera/index",
+    "pages/confirm/index",
+    "pages/result/result"
+  ],
+  "window": {
+    "navigationBarTitleText": "麻将助手",
+    "viewport": {
+      "width": "device-width"
+    }
+  }
+}
