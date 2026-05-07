@@ -26,7 +26,8 @@ export default {
     alternatives: [],
     listenTiles: [],
     dingque: '',
-    dingqueName: ''
+    dingqueName: '',
+    fanResult: null
   },
   onLoad() {
     var app = getApp();
@@ -47,7 +48,8 @@ export default {
       alternatives: analysis.alternatives,
       listenTiles: analysis.listenTiles,
       dingque: analysis.dingque,
-      dingqueName: analysis.dingqueName
+      dingqueName: analysis.dingqueName,
+      fanResult: analysis.fanResult || null
     });
   },
   nextRound() {
@@ -72,6 +74,12 @@ export default {
 
     <view ink:if="{{mode === 'win'}}">
       <text class="title">🎉 胡牌！</text>
+      <view ink:if="{{fanResult}}" class="fan-card">
+        <text class="fan-total">{{fanResult.totalFan}}番 · {{fanResult.fanName}}</text>
+        <view class="fan-list">
+          <text ink:for="{{fanResult.fans}}" class="fan-item">{{item.name}}({{item.fan}}番)</text>
+        </view>
+      </view>
     </view>
 
     <view ink:if="{{mode === 'listen'}}">
@@ -80,6 +88,7 @@ export default {
         <view ink:for="{{listenTiles}}" class="listen-item">
           <text class="tile-name">{{item.name}}</text>
           <text class="tile-remaining">({{item.remaining}}张)</text>
+          <text ink:if="{{item.fanResult}}" class="tile-fan">{{item.fanResult.totalFan}}番</text>
         </view>
       </view>
       <text class="empty-text" ink:if="{{listenTiles.length === 0}}">未听牌</text>
@@ -157,6 +166,33 @@ export default {
   color: rgba(255, 100, 100, 0.8);
   margin-bottom: 20px;
 }
+.fan-card {
+  background-color: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.fan-total {
+  font-size: 20px;
+  color: #FFD700;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+}
+.fan-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.fan-item {
+  font-size: 14px;
+  color: rgba(255, 215, 0, 0.7);
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: 2px 4px 2px 0;
+}
 .listen-list {
   display: flex;
   flex-direction: row;
@@ -180,6 +216,14 @@ export default {
   font-size: 12px;
   color: rgba(64, 255, 94, 0.5);
   margin-left: 4px;
+}
+.tile-fan {
+  font-size: 12px;
+  color: #FFD700;
+  margin-left: 6px;
+  background: rgba(255, 215, 0, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
 }
 .empty-text {
   font-size: 16px;

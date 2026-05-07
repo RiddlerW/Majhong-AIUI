@@ -213,6 +213,9 @@
           : (typeof require !== 'undefined') ? require('./mahjong-constants.js') : null;
     if (!C) return null;
 
+    var F = (typeof MahjongFan !== 'undefined') ? MahjongFan
+          : (typeof require !== 'undefined') ? require('./mahjong-fan.js') : null;
+
     var meldCount = (pengTiles ? pengTiles.length : 0) + (gangTiles ? gangTiles.length : 0);
     var count = C.tilesToCount(handTiles);
     var currentShanten = calculateShantenFromCount(count, meldCount);
@@ -239,7 +242,7 @@
         analysis.mode = 'win';
       } else if (currentShanten === 0) {
         analysis.mode = 'listen';
-        analysis.listenTiles = _getListenTilesFromCount(count, meldCount, ruleType, C);
+        analysis.listenTiles = _getListenTilesFromCount(count, meldCount, ruleType, C, handTiles, pengTiles, gangTiles, dingque, F);
       } else {
         analysis.mode = 'shanten';
         analysis.shantenLabel = _shantenLabel(currentShanten);
@@ -251,6 +254,9 @@
     } else if (handTiles.length === 14) {
       if (currentShanten === -1) {
         analysis.mode = 'win';
+        if (F) {
+          analysis.fanResult = F.calculateFan(handTiles, pengTiles, gangTiles, -1, ruleType, dingque, true, null);
+        }
       } else {
         analysis.mode = 'suggest';
         var suggestions = getSuggestions(handTiles, pengTiles, gangTiles, ruleType, dingque);
@@ -267,7 +273,7 @@
     return analysis;
   }
 
-  function _getListenTilesFromCount(count, meldCount, ruleType, C) {
+  function _getListenTilesFromCount(count, meldCount, ruleType, C, handTiles, pengTiles, gangTiles, dingque, F) {
     var range = C.getRuleTileRange(ruleType);
     var result = [];
     for (var i = range.min; i <= range.max; i++) {
@@ -276,10 +282,15 @@
       var shanten = calculateShantenFromCount(count, meldCount);
       if (shanten === -1) {
         var remaining = 4 - count[i] + 1;
+        var fanResult = null;
+        if (F) {
+          fanResult = F.getFanForListen(handTiles, pengTiles, gangTiles, i, ruleType, dingque);
+        }
         result.push({
           tileIndex: i,
           name: C.getTileShortName(i),
-          remaining: remaining
+          remaining: remaining,
+          fanResult: fanResult
         });
       }
       count[i]--;
