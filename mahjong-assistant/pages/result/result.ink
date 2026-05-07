@@ -14,11 +14,14 @@
 import wx from 'wx';
 
 var C = require('../../lib/mahjong-constants.js');
+var A = require('../../lib/mahjong-analyzer.js');
 
 export default {
   data: {
     handCount: 0,
     mode: 'listen',
+    shanten: 0,
+    shantenLabel: '',
     bestSuggestion: null,
     alternatives: [],
     listenTiles: [],
@@ -33,158 +36,19 @@ export default {
     var ruleType = (app && app.globalData.ruleType) || wx.getStorageSync('ruleType') || 'xz';
     var dingque = (app && app.globalData.dingque) || wx.getStorageSync('dingque') || '';
 
-    var handCount = handTiles.length;
-    var dingqueName = '';
-    if (dingque === 'wan') dingqueName = '万';
-    else if (dingque === 'tiao') dingqueName = '条';
-    else if (dingque === 'tong') dingqueName = '筒';
-
-    this.setData({ 
-      handCount: handCount,
-      dingque: dingque,
-      dingqueName: dingqueName
-    });
-
-    if (handCount === 13) {
-      this.setData({ mode: 'listen' });
-      this.calculateListening(handTiles, pengTiles, gangTiles, ruleType);
-    } else if (handCount === 14) {
-      this.setData({ mode: 'suggest' });
-      this.calculateSuggestion(handTiles, pengTiles, gangTiles, ruleType, dingque);
-    } else {
-      this.setData({
-        mode: 'error',
-        listenTiles: [],
-        bestSuggestion: null,
-        alternatives: []
-      });
-    }
-  },
-  calculateListening(handTiles, pengTiles, gangTiles, ruleType) {
-    var listenResult = [];
-    var range = C.getRuleTileRange(ruleType);
-    var count = C.tilesToCount(handTiles);
-
-    for (var i = range.min; i <= range.max; i++) {
-      if (count[i] >= 4) continue;
-      count[i]++;
-      if (this.isWinning(count, pengTiles, gangTiles, ruleType)) {
-        listenResult.push({
-          tileIndex: i,
-          name: C.getTileShortName(i),
-          fan: 1
-        });
-      }
-      count[i]--;
-    }
-
-    this.setData({ listenTiles: listenResult });
-  },
-  calculateSuggestion(handTiles, pengTiles, gangTiles, ruleType, dingque) {
-    var suggestions = [];
-    var count = C.tilesToCount(handTiles);
-    var range = C.getRuleTileRange(ruleType);
-
-    var dingqueRange = null;
-    if (dingque === 'wan') dingqueRange = { start: 0, end: 8 };
-    else if (dingque === 'tiao') dingqueRange = { start: 9, end: 17 };
-    else if (dingque === 'tong') dingqueRange = { start: 18, end: 26 };
-
-    for (var i = 0; i < C.TILE_COUNT; i++) {
-      if (count[i] <= 0) continue;
-
-      count[i]--;
-      var listenForThis = [];
-      for (var j = range.min; j <= range.max; j++) {
-        if (count[j] >= 4) continue;
-        count[j]++;
-        if (this.isWinning(count, pengTiles, gangTiles, ruleType)) {
-          listenForThis.push({
-            tileIndex: j,
-            name: C.getTileShortName(j)
-          });
-        }
-        count[j]--;
-      }
-      count[i]++;
-
-      if (listenForThis.length > 0) {
-        var isDingque = false;
-        if (dingqueRange && i >= dingqueRange.start && i <= dingqueRange.end) {
-          isDingque = true;
-        }
-        suggestions.push({
-          discardIndex: i,
-          discardName: C.getTileShortName(i),
-          listenTiles: listenForThis,
-          listenCount: listenForThis.length,
-          listenNames: listenForThis.map(function(t) { return t.name; }).join(' '),
-          isDingque: isDingque
-        });
-      }
-    }
-
-    suggestions.sort(function(a, b) {
-      if (a.isDingque && !b.isDingque) return -1;
-      if (!a.isDingque && b.isDingque) return 1;
-      return b.listenCount - a.listenCount;
-    });
-
-    var best = suggestions.length > 0 ? suggestions[0] : null;
-    var alts = suggestions.length > 1 ? suggestions.slice(1) : [];
+    var analysis = A.getAnalysis(handTiles, pengTiles, gangTiles, ruleType, dingque);
 
     this.setData({
-      bestSuggestion: best,
-      alternatives: alts
+      handCount: analysis.handCount,
+      mode: analysis.mode,
+      shanten: analysis.shanten,
+      shantenLabel: analysis.shantenLabel || '',
+      bestSuggestion: analysis.bestSuggestion,
+      alternatives: analysis.alternatives,
+      listenTiles: analysis.listenTiles,
+      dingque: analysis.dingque,
+      dingqueName: analysis.dingqueName
     });
-  },
-  isWinning(count, pengTiles, gangTiles, ruleType) {
-    var total = 0;
-    for (var i = 0; i < count.length; i++) {
-      total += count[i];
-    }
-    var meldCount = (pengTiles ? pengTiles.length : 0) + (gangTiles ? gangTiles.length : 0);
-    var expectedTotal = (4 - meldCount) * 3 + 2;
-    if (total !== expectedTotal) return false;
-
-    var c = count.slice();
-    for (var j = 0; j < c.length; j++) {
-      if (c[j] >= 2) {
-        c[j] -= 2;
-        if (this.tryMelds(c)) return true;
-        c[j] += 2;
-      }
-    }
-    return false;
-  },
-  tryMelds(count) {
-    var i;
-    for (i = 0; i < count.length; i++) {
-      if (count[i] > 0) break;
-    }
-    if (i >= count.length) return true;
-
-    if (count[i] >= 3) {
-      count[i] -= 3;
-      if (this.tryMelds(count)) return true;
-      count[i] += 3;
-    }
-
-    if (i < 27) {
-      var suitStart = Math.floor(i / 9) * 9;
-      var pos = i - suitStart;
-      if (pos <= 6 && count[i + 1] > 0 && count[i + 2] > 0) {
-        count[i]--;
-        count[i + 1]--;
-        count[i + 2]--;
-        if (this.tryMelds(count)) return true;
-        count[i]++;
-        count[i + 1]++;
-        count[i + 2]++;
-      }
-    }
-
-    return false;
   },
   nextRound() {
     wx.redirectTo({ url: '/pages/camera/index' });
@@ -206,14 +70,31 @@ export default {
       <button class="action-btn primary" bindtap="nextRound">重新拍照</button>
     </view>
 
+    <view ink:if="{{mode === 'win'}}">
+      <text class="title">🎉 胡牌！</text>
+    </view>
+
     <view ink:if="{{mode === 'listen'}}">
-      <text class="title">🀄 听牌提示</text>
+      <text class="title">🀄 听牌</text>
       <view class="listen-list" ink:if="{{listenTiles.length > 0}}">
         <view ink:for="{{listenTiles}}" class="listen-item">
           <text class="tile-name">{{item.name}}</text>
+          <text class="tile-remaining">({{item.remaining}}张)</text>
         </view>
       </view>
       <text class="empty-text" ink:if="{{listenTiles.length === 0}}">未听牌</text>
+    </view>
+
+    <view ink:if="{{mode === 'shanten'}}">
+      <text class="title">🀄 {{shantenLabel}}</text>
+      <view ink:if="{{alternatives.length > 0}}" class="suggestion-list">
+        <view ink:for="{{alternatives}}" class="suggestion-item">
+          <view ink:if="{{item.isDingque}}" class="dingque-mark">定缺</view>
+          <text class="suggestion-discard">打{{item.discardName}}</text>
+          <text class="suggestion-shanten">{{item.shantenAfter === 0 ? '→听牌' : '→' + item.shantenAfter + '进听'}}</text>
+          <text class="suggestion-remaining" ink:if="{{item.totalRemaining > 0}}">进张{{item.totalRemaining}}</text>
+        </view>
+      </view>
     </view>
 
     <view ink:if="{{mode === 'suggest'}}">
@@ -222,16 +103,21 @@ export default {
         <view ink:if="{{bestSuggestion.isDingque}}" class="dingque-tag">定缺必打</view>
         <text class="best-label">建议打</text>
         <text class="best-tile">{{bestSuggestion.discardName}}</text>
-        <text class="best-listen">听: {{bestSuggestion.listenNames}}</text>
+        <text class="best-listen" ink:if="{{bestSuggestion.shantenAfter === 0}}">听: {{bestSuggestion.listenNames}}</text>
+        <text class="best-shanten" ink:if="{{bestSuggestion.shantenAfter > 0}}">{{bestSuggestion.shantenAfter}}进听</text>
+        <text class="best-remaining" ink:if="{{bestSuggestion.totalRemaining > 0}}">有效进张: {{bestSuggestion.totalRemaining}}</text>
       </view>
       <view class="alt-list" ink:if="{{alternatives.length > 0}}">
         <text class="alt-title">其他选择</text>
         <view ink:for="{{alternatives}}" class="alt-item">
           <text ink:if="{{item.isDingque}}" class="dingque-mark">*</text>
-          <text class="alt-text">打{{item.discardName}} → 听{{item.listenNames}}</text>
+          <text class="alt-text">打{{item.discardName}}</text>
+          <text class="alt-listen" ink:if="{{item.shantenAfter === 0}}">→听{{item.listenNames}}</text>
+          <text class="alt-shanten" ink:if="{{item.shantenAfter > 0}}">→{{item.shantenAfter}}进听</text>
+          <text class="alt-remaining" ink:if="{{item.totalRemaining > 0}}">进张{{item.totalRemaining}}</text>
         </view>
       </view>
-      <text class="empty-text" ink:if="{{!bestSuggestion}}">无法胡牌</text>
+      <text class="empty-text" ink:if="{{!bestSuggestion}}">无法优化</text>
     </view>
 
     <view class="bottom-actions">
@@ -282,11 +168,18 @@ export default {
   border-radius: 8px;
   padding: 8px 14px;
   margin: 4px;
+  display: flex;
+  align-items: center;
 }
 .tile-name {
   font-size: 18px;
   color: #40FF5E;
   font-weight: bold;
+}
+.tile-remaining {
+  font-size: 12px;
+  color: rgba(64, 255, 94, 0.5);
+  margin-left: 4px;
 }
 .empty-text {
   font-size: 16px;
@@ -326,6 +219,18 @@ export default {
 .best-listen {
   font-size: 16px;
   color: #40FF5E;
+  display: block;
+}
+.best-shanten {
+  font-size: 16px;
+  color: #FFA500;
+  display: block;
+}
+.best-remaining {
+  font-size: 14px;
+  color: rgba(64, 255, 94, 0.6);
+  display: block;
+  margin-top: 4px;
 }
 .alt-title {
   font-size: 14px;
@@ -342,15 +247,62 @@ export default {
   margin-bottom: 4px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
 .dingque-mark {
   color: #FFA500;
-  font-size: 16px;
-  margin-right: 8px;
+  font-size: 12px;
+  margin-right: 6px;
+  background: rgba(255, 165, 0, 0.2);
+  padding: 1px 4px;
+  border-radius: 3px;
 }
 .alt-text {
   font-size: 14px;
+  color: rgba(64, 255, 94, 0.9);
+  font-weight: bold;
+}
+.alt-listen {
+  font-size: 13px;
   color: rgba(64, 255, 94, 0.7);
+  margin-left: 6px;
+}
+.alt-shanten {
+  font-size: 13px;
+  color: #FFA500;
+  margin-left: 6px;
+}
+.alt-remaining {
+  font-size: 12px;
+  color: rgba(64, 255, 94, 0.5);
+  margin-left: 6px;
+}
+.suggestion-list {
+  width: 100%;
+}
+.suggestion-item {
+  background-color: rgba(64, 255, 94, 0.05);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.suggestion-discard {
+  font-size: 16px;
+  color: #40FF5E;
+  font-weight: bold;
+}
+.suggestion-shanten {
+  font-size: 14px;
+  color: #FFA500;
+  margin-left: 8px;
+}
+.suggestion-remaining {
+  font-size: 12px;
+  color: rgba(64, 255, 94, 0.5);
+  margin-left: 8px;
 }
 .bottom-actions {
   display: flex;
