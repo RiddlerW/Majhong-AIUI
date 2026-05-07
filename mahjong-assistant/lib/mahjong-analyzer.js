@@ -22,16 +22,8 @@
   function calculateShantenFromCount(count, meldCount, ruleType) {
     meldCount = meldCount || 0;
     var shantenStandard = _shantenStandardFromCount(count, meldCount);
-    var minShanten = shantenStandard;
-    if (ruleType !== 'xz' && ruleType !== 'xl') {
-      var shantenChiitoi = _shantenChiitoiFromCount(count);
-      var shantenKokushi = _shantenKokushiFromCount(count);
-      minShanten = Math.min(minShanten, shantenChiitoi, shantenKokushi);
-    } else {
-      var shantenChiitoi = _shantenChiitoiFromCount(count);
-      minShanten = Math.min(minShanten, shantenChiitoi);
-    }
-    return minShanten;
+    var shantenChiitoi = _shantenChiitoiFromCount(count);
+    return Math.min(shantenStandard, shantenChiitoi);
   }
 
   function _shantenStandardFromCount(count, meldCount) {
@@ -93,17 +85,6 @@
     }
     if (kinds < 7) return 6 - pairs + (7 - kinds);
     return 6 - pairs;
-  }
-
-  function _shantenKokushiFromCount(count) {
-    var terminals = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33];
-    var kinds = 0;
-    var hasPair = 0;
-    for (var i = 0; i < terminals.length; i++) {
-      if (count[terminals[i]] >= 1) kinds++;
-      if (count[terminals[i]] >= 2) hasPair = 1;
-    }
-    return 13 - kinds - hasPair;
   }
 
   function getListeningTiles(handTiles, pengTiles, gangTiles, ruleType) {
