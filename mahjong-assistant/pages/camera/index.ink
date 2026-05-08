@@ -65,12 +65,12 @@ export default {
       '3. 杠牌区：桌面上翻开的4张相同的牌组（与碰牌区位置类似，但多一张）\n\n' +
       '按以下JSON格式输出：\n' +
       '{"hand_tiles": ["一万","一万","三万",...], ' +
-      '"peng_tiles": [["东风","东风","东风"]], ' +
-      '"gang_tiles": [["五筒","五筒","五筒","五筒"]]}\n\n' +
+      '"peng_tiles": ["东风","三万"], ' +
+      '"gang_tiles": ["五筒"]}\n\n' +
       '规则：\n' +
       '- hand_tiles：手牌，每张单独列出\n' +
-      '- peng_tiles：碰出的牌组，每组3张相同牌名放在一个数组中\n' +
-      '- gang_tiles：杠出的牌组，每组4张相同牌名放在一个数组中\n' +
+      '- peng_tiles：碰出的牌，每组只需写一次牌名\n' +
+      '- gang_tiles：杠出的牌，每组只需写一次牌名\n' +
       '- 如果某区域没有牌，对应字段填空数组[]\n' +
       '- 如果无法区分碰/杠区域，将所有非手牌区域的牌按3张一组放入peng_tiles，4张一组放入gang_tiles\n' +
       '- 如果完全无法区分区域，将所有牌放入hand_tiles';
@@ -128,16 +128,16 @@ export default {
         }).filter(function(idx) { return idx >= 0; });
       }
       if (parsed.peng_tiles) {
-        result.pengTiles = parsed.peng_tiles.map(function(group) {
-          return group.map(function(name) { return C.nameToIndex(name); })
-            .filter(function(idx) { return idx >= 0; });
-        }).filter(function(group) { return group.length === 3; });
+        result.pengTiles = parsed.peng_tiles.map(function(name) {
+          var idx = C.nameToIndex(name);
+          return idx >= 0 ? [idx, idx, idx] : null;
+        }).filter(function(group) { return group !== null; });
       }
       if (parsed.gang_tiles) {
-        result.gangTiles = parsed.gang_tiles.map(function(group) {
-          return group.map(function(name) { return C.nameToIndex(name); })
-            .filter(function(idx) { return idx >= 0; });
-        }).filter(function(group) { return group.length === 4; });
+        result.gangTiles = parsed.gang_tiles.map(function(name) {
+          var idx = C.nameToIndex(name);
+          return idx >= 0 ? [idx, idx, idx, idx] : null;
+        }).filter(function(group) { return group !== null; });
       }
     } catch (e) {
       console.error('解析识别结果失败:', e);
