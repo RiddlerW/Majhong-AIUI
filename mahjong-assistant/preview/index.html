@@ -213,6 +213,7 @@ body {
       <button class="nav-btn" onclick="showPage('camera')">拍照识别</button>
       <button class="nav-btn" onclick="showPage('confirm')">确认手牌</button>
       <button class="nav-btn" onclick="showPage('result')">分析结果</button>
+      <button class="nav-btn" onclick="showPage('settings')">设置</button>
     </div>
 
     <div id="page-index" class="page active">
@@ -346,6 +347,21 @@ body {
         <button class="btn btn-secondary" onclick="showPage('index')">切换规则</button>
         <button class="btn btn-primary" onclick="showPage('camera')">下一轮拍照</button>
       </div>
+    </div>
+
+    <div id="page-settings" class="page">
+      <text class="title">⚙️ 设置</text>
+      <div class="section" style="padding:20px;border-radius:16px;border:2px solid rgba(64,255,94,0.2);background:rgba(64,255,94,0.05);margin-bottom:20px;width:100%;">
+        <text style="font-size:18px;color:#40FF5E;font-weight:bold;display:block;margin-bottom:16px;">OCR 识别服务</text>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:14px;color:rgba(64,255,94,0.6);">Minimax API Key</span>
+          <span id="key-status" style="font-size:14px;font-weight:bold;color:rgba(255,100,100,0.8);">未配置</span>
+        </div>
+        <input id="settings-api-key" type="password" placeholder="请输入 Minimax API Key" style="width:100%;height:44px;border-radius:10px;border:1px solid rgba(64,255,94,0.3);background:rgba(64,255,94,0.08);color:#40FF5E;font-size:14px;padding:0 12px;margin-bottom:8px;outline:none;" />
+        <text style="font-size:12px;color:rgba(64,255,94,0.4);display:block;margin-bottom:16px;">用于拍照识别麻将牌，Key 将保存在本地</text>
+        <button class="btn btn-primary btn-small" onclick="saveApiKey()">保存</button>
+      </div>
+      <button class="btn btn-secondary" onclick="showPage('index')">← 返回</button>
     </div>
   </div>
 
@@ -793,7 +809,7 @@ function showPage(name) {
   var target = document.getElementById('page-' + name);
   if (target) target.classList.add('active');
   var navBtns = document.querySelectorAll('.nav-btn');
-  var pageNames = ['index', 'camera', 'confirm', 'result'];
+  var pageNames = ['index', 'camera', 'confirm', 'result', 'settings'];
   for (var i = 0; i < navBtns.length; i++) {
     navBtns[i].classList.toggle('active', pageNames[i] === name);
   }
@@ -839,6 +855,19 @@ function updateHandHint() {
 
 renderRuleList();
 updateDebug();
+
+function saveApiKey() {
+  var key = document.getElementById('settings-api-key').value.trim();
+  var statusEl = document.getElementById('key-status');
+  if (!key) {
+    statusEl.textContent = '未配置';
+    statusEl.style.color = 'rgba(255,100,100,0.8)';
+    return;
+  }
+  statusEl.textContent = '已配置';
+  statusEl.style.color = 'rgba(64,255,94,0.8)';
+  alert('API Key 已保存（预览模式下仅模拟保存）');
+}
 </script>
 </body>
 </html>
