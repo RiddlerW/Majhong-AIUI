@@ -3,7 +3,8 @@
     "pages/index/index",
     "pages/camera/index",
     "pages/confirm/index",
-    "pages/result/result"
+    "pages/result/result",
+    "pages/settings/index"
   ],
   "window": {
     "navigationBarTitleText": "麻将助手",

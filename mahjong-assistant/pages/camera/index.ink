@@ -55,6 +55,7 @@ export default {
     });
   },
   recognizeImage(imageData) {
+    var self = this;
     var app = getApp();
     var ruleType = (app && app.globalData.ruleType) || wx.getStorageSync('ruleType') || 'xz';
     var lastResult = wx.getStorageSync('lastRecognition') || null;
