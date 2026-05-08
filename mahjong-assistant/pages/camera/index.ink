@@ -59,12 +59,21 @@ export default {
     var ruleType = (app && app.globalData.ruleType) || wx.getStorageSync('ruleType') || 'xz';
     var lastResult = wx.getStorageSync('lastRecognition') || null;
 
-    var prompt = '请识别图片中的麻将牌，按以下JSON格式输出：\n' +
+    var prompt = '请识别图片中的麻将牌，注意区分以下三个区域：\n' +
+      '1. 手牌区：玩家手中竖立或叠放的牌（通常在下方中间位置）\n' +
+      '2. 碰牌区：桌面上翻开的3张相同的牌组（通常在手牌前方或侧面）\n' +
+      '3. 杠牌区：桌面上翻开的4张相同的牌组（与碰牌区位置类似，但多一张）\n\n' +
+      '按以下JSON格式输出：\n' +
       '{"hand_tiles": ["一万","一万","三万",...], ' +
       '"peng_tiles": [["东风","东风","东风"]], ' +
-      '"gang_tiles": [["五筒","五筒","五筒","五筒"]]}\n' +
-      'hand_tiles为手牌，peng_tiles为碰出的牌组，gang_tiles为杠出的牌组。\n' +
-      '如果无法区分碰/杠区域，将所有牌放入hand_tiles。';
+      '"gang_tiles": [["五筒","五筒","五筒","五筒"]]}\n\n' +
+      '规则：\n' +
+      '- hand_tiles：手牌，每张单独列出\n' +
+      '- peng_tiles：碰出的牌组，每组3张相同牌名放在一个数组中\n' +
+      '- gang_tiles：杠出的牌组，每组4张相同牌名放在一个数组中\n' +
+      '- 如果某区域没有牌，对应字段填空数组[]\n' +
+      '- 如果无法区分碰/杠区域，将所有非手牌区域的牌按3张一组放入peng_tiles，4张一组放入gang_tiles\n' +
+      '- 如果完全无法区分区域，将所有牌放入hand_tiles';
 
     if (lastResult && lastResult.handTiles && lastResult.handTiles.length > 0) {
       var C = require('../../lib/mahjong-constants.js');

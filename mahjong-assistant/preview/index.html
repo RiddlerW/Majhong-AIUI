@@ -18,10 +18,11 @@ body {
 .phone-frame {
   width: 480px;
   min-height: 380px;
-  max-height: 600px;
+  max-height: 700px;
+  overflow-y: auto;
   background: #000;
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: hidden;
   border: 2px solid #333;
   position: relative;
 }
@@ -53,6 +54,7 @@ body {
 .btn-primary { background: #40FF5E; color: #000; }
 .btn-secondary { background: rgba(64,255,94,0.15); color: #40FF5E; border: 1px solid rgba(64,255,94,0.3); }
 .btn-small { height: 40px; font-size: 14px; line-height: 40px; }
+.btn-danger { background: rgba(255,100,100,0.15); color: rgba(255,100,100,0.9); border: 1px solid rgba(255,100,100,0.3); }
 
 .camera-area {
   width: 100%; height: 180px; border-radius: 12px;
@@ -63,7 +65,9 @@ body {
 .status-text { font-size: 14px; color: rgba(64,255,94,0.6); margin-bottom: 16px; text-align: center; }
 
 .section { margin-bottom: 12px; }
-.section-label { font-size: 14px; color: rgba(64,255,94,0.5); margin-bottom: 8px; }
+.section-header { display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.section-label { font-size: 14px; color: rgba(64,255,94,0.5); }
+.section-action { font-size: 14px; color: #40FF5E; cursor: pointer; padding: 2px 8px; }
 .tile-list { display: flex; flex-direction: row; flex-wrap: wrap; }
 .tile-item {
   display: flex; align-items: center; background: rgba(64,255,94,0.1);
@@ -71,6 +75,13 @@ body {
 }
 .tile-name { font-size: 16px; color: #40FF5E; }
 .tile-count { font-size: 14px; color: rgba(64,255,94,0.6); margin-left: 4px; }
+
+.peng-item { background: rgba(255,165,0,0.15) !important; border: 1px solid rgba(255,165,0,0.3); }
+.peng-item .tile-name { color: #FFA500; }
+.gang-item { background: rgba(255,100,100,0.15) !important; border: 1px solid rgba(255,100,100,0.3); }
+.gang-item .tile-name { color: rgba(255,100,100,0.9); }
+.tile-remove { font-size: 14px; color: rgba(255,100,100,0.7); margin-left: 8px; cursor: pointer; padding: 2px 4px; }
+.empty-hint { font-size: 13px; color: rgba(64,255,94,0.3); }
 
 .actions { display: flex; flex-direction: row; margin-top: auto; padding-top: 16px; gap: 8px; }
 .actions .btn { flex: 1; margin-top: 0; }
@@ -108,10 +119,28 @@ body {
 }
 .manual-input label { display: block; margin-bottom: 6px; color: rgba(64,255,94,0.6); font-size: 13px; }
 .manual-input textarea {
-  width: 100%; height: 60px; background: rgba(0,0,0,0.5); border: 1px solid rgba(64,255,94,0.2);
+  width: 100%; height: 50px; background: rgba(0,0,0,0.5); border: 1px solid rgba(64,255,94,0.2);
   border-radius: 6px; color: #40FF5E; padding: 8px; font-size: 14px; resize: none;
 }
 .manual-input .btn { margin-top: 8px; }
+
+.peng-input, .gang-input {
+  width: 100%; margin-top: 8px; padding: 12px;
+  background: rgba(255,165,0,0.05); border: 1px solid rgba(255,165,0,0.2);
+  border-radius: 8px; color: #FFA500; font-size: 14px;
+}
+.gang-input {
+  background: rgba(255,100,100,0.05); border: 1px solid rgba(255,100,100,0.2);
+  color: rgba(255,100,100,0.9);
+}
+.peng-input label, .gang-input label { display: block; margin-bottom: 6px; font-size: 13px; }
+.peng-input label { color: rgba(255,165,0,0.6); }
+.gang-input label { color: rgba(255,100,100,0.6); }
+.peng-input textarea, .gang-input textarea {
+  width: 100%; height: 40px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,165,0,0.2);
+  border-radius: 6px; color: #FFA500; padding: 8px; font-size: 14px; resize: none;
+}
+.gang-input textarea { border-color: rgba(255,100,100,0.2); color: rgba(255,100,100,0.9); }
 
 .debug-panel {
   margin-top: 20px; padding: 16px; background: #111; border-radius: 12px;
@@ -162,6 +191,17 @@ body {
 .fan-list { display: flex; flex-direction: row; flex-wrap: wrap; }
 .fan-item { font-size: 14px; color: rgba(255,215,0,0.7); background: rgba(255,215,0,0.1); border-radius: 6px; padding: 4px 8px; margin: 2px 4px 2px 0; }
 .tile-fan { font-size: 12px; color: #FFD700; margin-left: 6px; background: rgba(255,215,0,0.15); padding: 1px 4px; border-radius: 3px; }
+
+.add-peng-area, .add-gang-area {
+  width: 100%; margin-top: 8px; padding: 12px;
+  border-radius: 8px; font-size: 14px;
+}
+.add-peng-area { background: rgba(255,165,0,0.08); border: 1px solid rgba(255,165,0,0.3); }
+.add-gang-area { background: rgba(255,100,100,0.08); border: 1px solid rgba(255,100,100,0.3); }
+.add-peng-area .adjust-name { color: #FFA500; }
+.add-gang-area .adjust-name { color: rgba(255,100,100,0.9); }
+.add-peng-area .arrow-btn { background: rgba(255,165,0,0.15); color: #FFA500; }
+.add-gang-area .arrow-btn { background: rgba(255,100,100,0.15); color: rgba(255,100,100,0.9); }
 </style>
 </head>
 <body>
@@ -208,37 +248,83 @@ body {
       </div>
       <div class="camera-area">📷 相机取景（预览模式）</div>
       <div class="manual-input">
-        <label>手动输入手牌（用空格分隔，如：一万 一万 三万 四万 五万 二条 四条 六条 七条 三筒 五筒 八筒 九筒）</label>
-        <textarea id="manual-tiles-input" placeholder="一万 一万 三万 四万 五万 二条 四条 六条 七条 三筒 五筒 八筒 九筒"></textarea>
-        <button class="btn btn-primary btn-small" onclick="manualRecognize()">确认输入</button>
+        <label>手牌（用空格分隔，如：一万 一万 三万 四万 五万）<span id="hand-expected-hint" style="color:rgba(255,165,0,0.6);"></span></label>
+        <textarea id="manual-tiles-input" placeholder="一万 一万 三万 四万 五万 二条 四条 六条 七条 三筒 五筒 八筒 九筒" oninput="updateHandHint()"></textarea>
       </div>
+      <div class="peng-input">
+        <label>碰牌（每组用逗号分隔，如：东风,东风,东风  三万,三万,三万）</label>
+        <textarea id="manual-peng-input" placeholder="东风,东风,东风  三万,三万,三万" oninput="updateHandHint()"></textarea>
+      </div>
+      <div class="gang-input">
+        <label>杠牌（每组用逗号分隔，如：五筒,五筒,五筒,五筒）</label>
+        <textarea id="manual-gang-input" placeholder="五筒,五筒,五筒,五筒" oninput="updateHandHint()"></textarea>
+      </div>
+      <button class="btn btn-primary btn-small" onclick="manualRecognize()">确认输入</button>
       <text class="status-text" id="camera-status">预览模式：手动输入或模拟拍照</text>
-      <button class="btn btn-primary" onclick="simulateCapture()">模拟拍照识别</button>
+      <button class="btn btn-secondary" onclick="simulateCapture()">模拟拍照识别</button>
     </div>
 
     <div id="page-confirm" class="page">
       <text class="title">识别结果确认</text>
       <div class="section">
-        <text class="section-label" id="hand-count-label">手牌 (0张)</text>
+        <div class="section-header">
+          <text class="section-label" id="hand-count-label">手牌 (0张)</text>
+          <text class="section-action" onclick="enterAdjustHand()">调整</text>
+        </div>
         <div class="tile-list" id="hand-tile-list"></div>
       </div>
-      <div class="section" id="peng-section" style="display:none;">
-        <text class="section-label">碰牌</text>
+      <div class="section">
+        <div class="section-header">
+          <text class="section-label" id="peng-count-label">碰牌 (0组)</text>
+          <text class="section-action" onclick="toggleAddPeng()">+添加</text>
+        </div>
         <div class="tile-list" id="peng-tile-list"></div>
+        <text class="empty-hint" id="peng-empty">无碰牌</text>
       </div>
-      <div class="section" id="gang-section" style="display:none;">
-        <text class="section-label">杠牌</text>
+      <div class="section">
+        <div class="section-header">
+          <text class="section-label" id="gang-count-label">杠牌 (0组)</text>
+          <text class="section-action" onclick="toggleAddGang()">+添加</text>
+        </div>
         <div class="tile-list" id="gang-tile-list"></div>
+        <text class="empty-hint" id="gang-empty">无杠牌</text>
+      </div>
+      <div id="add-peng-area" class="add-peng-area" style="display:none;">
+        <div class="adjust-display">
+          <button class="arrow-btn" onclick="prevPengTile()">◀</button>
+          <div class="adjust-info">
+            <text class="adjust-name" id="add-peng-name">1万</text>
+            <text class="adjust-count">×3(碰)</text>
+          </div>
+          <button class="arrow-btn" onclick="nextPengTile()">▶</button>
+        </div>
+        <div class="actions" style="padding-top:0;">
+          <button class="btn btn-secondary btn-small" onclick="toggleAddPeng()" style="flex:1;">取消</button>
+          <button class="btn btn-primary btn-small" onclick="confirmAddPeng()" style="flex:1;">确认添加</button>
+        </div>
+      </div>
+      <div id="add-gang-area" class="add-gang-area" style="display:none;">
+        <div class="adjust-display">
+          <button class="arrow-btn" onclick="prevGangTile()">◀</button>
+          <div class="adjust-info">
+            <text class="adjust-name" id="add-gang-name">1万</text>
+            <text class="adjust-count">×4(杠)</text>
+          </div>
+          <button class="arrow-btn" onclick="nextGangTile()">▶</button>
+        </div>
+        <div class="actions" style="padding-top:0;">
+          <button class="btn btn-secondary btn-small" onclick="toggleAddGang()" style="flex:1;">取消</button>
+          <button class="btn btn-primary btn-small" onclick="confirmAddGang()" style="flex:1;">确认添加</button>
+        </div>
       </div>
       <div class="actions">
         <button class="btn btn-secondary" onclick="showPage('camera')">重拍</button>
-        <button class="btn btn-secondary" onclick="enterAdjust()">调整</button>
-        <button class="btn btn-primary" onclick="confirmAndAnalyze()">确认</button>
+        <button class="btn btn-primary" onclick="confirmAndAnalyze()">确认分析</button>
       </div>
     </div>
 
     <div id="page-adjust" class="page">
-      <text class="title">手动调整</text>
+      <text class="title">调整手牌</text>
       <div class="adjust-display">
         <button class="arrow-btn" onclick="prevTile()">◀</button>
         <div class="adjust-info">
@@ -280,7 +366,11 @@ var appState = {
   pengTiles: [],
   gangTiles: [],
   lastRecognition: null,
-  adjustIndex: 0
+  adjustIndex: 0,
+  addPengIndex: 0,
+  addGangIndex: 0,
+  showAddPeng: false,
+  showAddGang: false
 };
 
 var rules = [
@@ -333,20 +423,49 @@ function startGame(dingque) {
 }
 
 function manualRecognize() {
-  var input = document.getElementById('manual-tiles-input').value.trim();
-  if (!input) return;
+  var handInput = document.getElementById('manual-tiles-input').value.trim();
+  var pengInput = document.getElementById('manual-peng-input').value.trim();
+  var gangInput = document.getElementById('manual-gang-input').value.trim();
+
+  if (!handInput) return;
+
+  var handTiles = parseTileNames(handInput);
+  handTiles.sort(function(a, b) { return a - b; });
+  appState.handTiles = handTiles;
+
+  appState.pengTiles = parsePengGangInput(pengInput, 3);
+  appState.gangTiles = parsePengGangInput(gangInput, 4);
+
+  showConfirmPage();
+  updateDebug();
+}
+
+function parseTileNames(input) {
   var names = input.split(/[\s,，、]+/);
   var tiles = [];
   for (var i = 0; i < names.length; i++) {
     var idx = MahjongConstants.nameToIndex(names[i]);
     if (idx >= 0) tiles.push(idx);
   }
-  tiles.sort(function(a, b) { return a - b; });
-  appState.handTiles = tiles;
-  appState.pengTiles = [];
-  appState.gangTiles = [];
-  showConfirmPage();
-  updateDebug();
+  return tiles;
+}
+
+function parsePengGangInput(input, expectedCount) {
+  if (!input) return [];
+  var groups = input.split(/\s+/);
+  var result = [];
+  for (var i = 0; i < groups.length; i++) {
+    var names = groups[i].split(/[,，]/);
+    var tileIdxs = [];
+    for (var j = 0; j < names.length; j++) {
+      var idx = MahjongConstants.nameToIndex(names[j]);
+      if (idx >= 0) tileIdxs.push(idx);
+    }
+    if (tileIdxs.length === expectedCount) {
+      result.push(tileIdxs);
+    }
+  }
+  return result;
 }
 
 function simulateCapture() {
@@ -356,7 +475,7 @@ function simulateCapture() {
     gb: [0, 1, 2, 3, 4, 9, 10, 11, 18, 19, 20, 27, 28]
   };
   appState.handTiles = demoHands[appState.ruleType] || demoHands.xz;
-  appState.pengTiles = [];
+  appState.pengTiles = [[7, 7, 7]];
   appState.gangTiles = [];
   showConfirmPage();
   updateDebug();
@@ -372,23 +491,131 @@ function showConfirmPage() {
   document.getElementById('hand-tile-list').innerHTML = html;
   document.getElementById('hand-count-label').textContent = '手牌 (' + handTiles.length + '张)';
 
+  renderPengList();
+  renderGangList();
+
+  appState.showAddPeng = false;
+  appState.showAddGang = false;
+  document.getElementById('add-peng-area').style.display = 'none';
+  document.getElementById('add-gang-area').style.display = 'none';
+
+  showPage('confirm');
+}
+
+function renderPengList() {
   var pengHtml = '';
   for (var i = 0; i < appState.pengTiles.length; i++) {
     var g = appState.pengTiles[i];
-    pengHtml += '<div class="tile-item"><span class="tile-name">' + MahjongConstants.getTileShortName(g[0]) + '×3(碰)</span></div>';
+    pengHtml += '<div class="tile-item peng-item"><span class="tile-name">' + MahjongConstants.getTileShortName(g[0]) + '×3(碰)</span><span class="tile-remove" onclick="removePeng(' + i + ')">✕</span></div>';
   }
   document.getElementById('peng-tile-list').innerHTML = pengHtml;
-  document.getElementById('peng-section').style.display = appState.pengTiles.length > 0 ? 'block' : 'none';
+  document.getElementById('peng-count-label').textContent = '碰牌 (' + appState.pengTiles.length + '组)';
+  document.getElementById('peng-empty').style.display = appState.pengTiles.length > 0 ? 'none' : 'inline';
+}
 
+function renderGangList() {
   var gangHtml = '';
   for (var i = 0; i < appState.gangTiles.length; i++) {
     var g = appState.gangTiles[i];
-    gangHtml += '<div class="tile-item"><span class="tile-name">' + MahjongConstants.getTileShortName(g[0]) + '×4(杠)</span></div>';
+    gangHtml += '<div class="tile-item gang-item"><span class="tile-name">' + MahjongConstants.getTileShortName(g[0]) + '×4(杠)</span><span class="tile-remove" onclick="removeGang(' + i + ')">✕</span></div>';
   }
   document.getElementById('gang-tile-list').innerHTML = gangHtml;
-  document.getElementById('gang-section').style.display = appState.gangTiles.length > 0 ? 'block' : 'none';
+  document.getElementById('gang-count-label').textContent = '杠牌 (' + appState.gangTiles.length + '组)';
+  document.getElementById('gang-empty').style.display = appState.gangTiles.length > 0 ? 'none' : 'inline';
+}
 
-  showPage('confirm');
+function removePeng(idx) {
+  appState.pengTiles.splice(idx, 1);
+  renderPengList();
+  updateDebug();
+}
+
+function removeGang(idx) {
+  appState.gangTiles.splice(idx, 1);
+  renderGangList();
+  updateDebug();
+}
+
+function toggleAddPeng() {
+  appState.showAddPeng = !appState.showAddPeng;
+  appState.addPengIndex = 0;
+  document.getElementById('add-peng-area').style.display = appState.showAddPeng ? 'block' : 'none';
+  if (appState.showAddPeng) {
+    updateAddPengDisplay();
+    appState.showAddGang = false;
+    document.getElementById('add-gang-area').style.display = 'none';
+  }
+}
+
+function toggleAddGang() {
+  appState.showAddGang = !appState.showAddGang;
+  appState.addGangIndex = 0;
+  document.getElementById('add-gang-area').style.display = appState.showAddGang ? 'block' : 'none';
+  if (appState.showAddGang) {
+    updateAddGangDisplay();
+    appState.showAddPeng = false;
+    document.getElementById('add-peng-area').style.display = 'none';
+  }
+}
+
+function updateAddPengDisplay() {
+  var range = MahjongConstants.getRuleTileRange(appState.ruleType);
+  var tileIdx = range.min + appState.addPengIndex;
+  if (tileIdx > range.max) tileIdx = range.min;
+  document.getElementById('add-peng-name').textContent = MahjongConstants.getTileShortName(tileIdx);
+}
+
+function updateAddGangDisplay() {
+  var range = MahjongConstants.getRuleTileRange(appState.ruleType);
+  var tileIdx = range.min + appState.addGangIndex;
+  if (tileIdx > range.max) tileIdx = range.min;
+  document.getElementById('add-gang-name').textContent = MahjongConstants.getTileShortName(tileIdx);
+}
+
+function prevPengTile() {
+  var range = MahjongConstants.getRuleTileRange(appState.ruleType);
+  var total = range.max - range.min + 1;
+  appState.addPengIndex = (appState.addPengIndex - 1 + total) % total;
+  updateAddPengDisplay();
+}
+
+function nextPengTile() {
+  var range = MahjongConstants.getRuleTileRange(appState.ruleType);
+  var total = range.max - range.min + 1;
+  appState.addPengIndex = (appState.addPengIndex + 1) % total;
+  updateAddPengDisplay();
+}
+
+function prevGangTile() {
+  var range = MahjongConstants.getRuleTileRange(appState.ruleType);
+  var total = range.max - range.min + 1;
+  appState.addGangIndex = (appState.addGangIndex - 1 + total) % total;
+  updateAddGangDisplay();
+}
+
+function nextGangTile() {
+  var range = MahjongConstants.getRuleTileRange(appState.ruleType);
+  var total = range.max - range.min + 1;
+  appState.addGangIndex = (appState.addGangIndex + 1) % total;
+  updateAddGangDisplay();
+}
+
+function confirmAddPeng() {
+  var range = MahjongConstants.getRuleTileRange(appState.ruleType);
+  var tileIdx = range.min + appState.addPengIndex;
+  appState.pengTiles.push([tileIdx, tileIdx, tileIdx]);
+  renderPengList();
+  toggleAddPeng();
+  updateDebug();
+}
+
+function confirmAddGang() {
+  var range = MahjongConstants.getRuleTileRange(appState.ruleType);
+  var tileIdx = range.min + appState.addGangIndex;
+  appState.gangTiles.push([tileIdx, tileIdx, tileIdx, tileIdx]);
+  renderGangList();
+  toggleAddGang();
+  updateDebug();
 }
 
 function buildHandGroups(tiles) {
@@ -403,7 +630,7 @@ function buildHandGroups(tiles) {
 }
 
 var adjustTiles = [];
-function enterAdjust() {
+function enterAdjustHand() {
   adjustTiles = appState.handTiles.slice();
   appState.adjustIndex = 0;
   updateAdjustDisplay();
@@ -586,6 +813,8 @@ function updateDebug() {
     dingque: appState.dingque || '-',
     handTiles: appState.handTiles.map(function(t) { return MahjongConstants.getTileShortName(t); }).join(' '),
     handCount: appState.handTiles.length,
+    pengGroups: appState.pengTiles.map(function(g) { return MahjongConstants.getTileShortName(g[0]) + '×3'; }).join(' '),
+    gangGroups: appState.gangTiles.map(function(g) { return MahjongConstants.getTileShortName(g[0]) + '×4'; }).join(' '),
     shanten: shanten
   };
   var html = '';
@@ -593,6 +822,22 @@ function updateDebug() {
     html += '<div class="state-item">' + key + ': ' + JSON.stringify(state[key]) + '</div>';
   }
   document.getElementById('debug-state').innerHTML = html;
+}
+
+function updateHandHint() {
+  var pengInput = document.getElementById('manual-peng-input').value.trim();
+  var gangInput = document.getElementById('manual-gang-input').value.trim();
+  var pengCount = parsePengGangInput(pengInput, 3).length;
+  var gangCount = parsePengGangInput(gangInput, 4).length;
+  var meldCount = pengCount + gangCount;
+  var hint = document.getElementById('hand-expected-hint');
+  if (meldCount > 0) {
+    var listenCount = 13 - meldCount * 2;
+    var drawnCount = 14 - meldCount * 2;
+    hint.textContent = '（有碰/杠时期望' + listenCount + '或' + drawnCount + '张）';
+  } else {
+    hint.textContent = '';
+  }
 }
 
 renderRuleList();
