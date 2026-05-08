@@ -93,20 +93,30 @@ export default {
       });
     }
 
-    return fetch('https://api.minimax.chat/v1/mcp/understand_image', {
+    var base64Data = self.arrayBufferToBase64(imageData);
+    var imageUrl = 'data:image/jpeg;base64,' + base64Data;
+
+    return fetch('https://api.minimaxi.com/v1/coding_plan/vlm', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'MM-API-Source': 'MahjongAssistant'
       },
       body: JSON.stringify({
-        image: self.arrayBufferToBase64(imageData),
+        image_url: imageUrl,
         prompt: prompt
       })
     }).then(function(res) {
       return res.json();
     }).then(function(data) {
-      return self.parseRecognitionResult(data, ruleType);
+      var baseResp = data.base_resp || {};
+      if (baseResp.status_code !== 0) {
+        console.error('Minimax API 错误:', baseResp.status_msg);
+        return { handTiles: [], pengTiles: [], gangTiles: [] };
+      }
+      var content = data.content || '';
+      return self.parseRecognitionResult(content, ruleType);
     });
   },
   arrayBufferToBase64(buffer) {
@@ -122,7 +132,25 @@ export default {
     var result = { handTiles: [], pengTiles: [], gangTiles: [] };
 
     try {
-      var parsed = typeof data === 'string' ? JSON.parse(data) : data;
+      var parsed = null;
+      if (typeof data === 'string') {
+        try {
+          parsed = JSON.parse(data);
+        } catch(e) {
+          var jsonMatch = data.match(/\{[\s\S]*"hand_tiles"[\s\S]*\}/);
+          if (jsonMatch) {
+            parsed = JSON.parse(jsonMatch[0]);
+          } else {
+            var codeMatch = data.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (codeMatch) {
+              parsed = JSON.parse(codeMatch[1].trim());
+            }
+          }
+        }
+      } else {
+        parsed = data;
+      }
+      if (!parsed) return result;
       if (parsed.hand_tiles) {
         result.handTiles = parsed.hand_tiles.map(function(name) {
           return C.nameToIndex(name);
