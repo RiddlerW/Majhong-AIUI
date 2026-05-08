@@ -577,7 +577,7 @@ function recognizeImage() {
   var btn = document.getElementById('recognize-btn');
   btn.disabled = true;
   btn.textContent = '识别中...';
-  document.getElementById('camera-status').textContent = '正在调用 Minimax API 识别...';
+  document.getElementById('camera-status').textContent = '正在提交识别请求...';
 
   var prompt = buildOcrPrompt();
 
@@ -590,44 +590,82 @@ function recognizeImage() {
       prompt: prompt
     })
   }).then(function(res) {
-    var contentType = res.headers.get('content-type') || '';
-    if (contentType.indexOf('application/json') === -1) {
+    if (!res.ok) {
       return res.text().then(function(text) {
-        throw new Error('服务器返回非JSON响应 (HTTP ' + res.status + '): ' + text.substring(0, 200));
+        throw new Error('提交失败 (HTTP ' + res.status + '): ' + text.substring(0, 200));
       });
     }
     return res.json();
   }).then(function(data) {
-    btn.disabled = false;
-    btn.textContent = '拍照识别';
-
     if (data.error) {
+      btn.disabled = false;
+      btn.textContent = '拍照识别';
       document.getElementById('camera-status').textContent = '❌ ' + data.error;
       return;
     }
-
-    var content = data.content || '';
-    var parsed = extractTileJson(content);
-    if (!parsed) {
-      document.getElementById('camera-status').textContent = '❌ 无法解析识别结果，请重试或手动输入';
-      console.log('Raw API response:', content);
-      return;
-    }
-
-    var handTiles = parseTileArray(parsed.hand_tiles || []);
-    handTiles.sort(function(a, b) { return a - b; });
-    appState.handTiles = handTiles;
-    appState.pengTiles = parsePengFromOcr(parsed.peng_tiles || []);
-    appState.gangTiles = parseGangFromOcr(parsed.gang_tiles || []);
-
-    document.getElementById('camera-status').textContent = '✅ 识别完成';
-    showConfirmPage();
-    updateDebug();
+    var jobId = data.jobId;
+    document.getElementById('camera-status').textContent = '识别中，请稍候...';
+    pollJobResult(jobId, btn);
   }).catch(function(err) {
     btn.disabled = false;
     btn.textContent = '拍照识别';
     document.getElementById('camera-status').textContent = '❌ 请求失败: ' + err.message;
   });
+}
+
+function pollJobResult(jobId, btn) {
+  var dots = 0;
+  var pollTimer = setInterval(function() {
+    fetch('/api/job/' + jobId).then(function(res) {
+      if (!res.ok) {
+        return res.text().then(function(text) {
+          throw new Error('查询失败 (HTTP ' + res.status + ')');
+        });
+      }
+      return res.json();
+    }).then(function(data) {
+      if (data.status === 'processing') {
+        dots = (dots + 1) % 4;
+        var dotStr = new Array(dots + 1).join('.');
+        document.getElementById('camera-status').textContent = '正在识别中' + dotStr;
+        return;
+      }
+
+      clearInterval(pollTimer);
+      btn.disabled = false;
+      btn.textContent = '拍照识别';
+
+      if (data.status === 'error') {
+        document.getElementById('camera-status').textContent = '❌ ' + (data.error || '识别失败');
+        return;
+      }
+
+      if (data.status === 'done' && data.result) {
+        var content = data.result.content || '';
+        var parsed = extractTileJson(content);
+        if (!parsed) {
+          document.getElementById('camera-status').textContent = '❌ 无法解析识别结果，请重试或手动输入';
+          console.log('Raw API response:', content);
+          return;
+        }
+
+        var handTiles = parseTileArray(parsed.hand_tiles || []);
+        handTiles.sort(function(a, b) { return a - b; });
+        appState.handTiles = handTiles;
+        appState.pengTiles = parsePengFromOcr(parsed.peng_tiles || []);
+        appState.gangTiles = parseGangFromOcr(parsed.gang_tiles || []);
+
+        document.getElementById('camera-status').textContent = '✅ 识别完成';
+        showConfirmPage();
+        updateDebug();
+      }
+    }).catch(function(err) {
+      clearInterval(pollTimer);
+      btn.disabled = false;
+      btn.textContent = '拍照识别';
+      document.getElementById('camera-status').textContent = '❌ 轮询失败: ' + err.message;
+    });
+  }, 2000);
 }
 
 function extractTileJson(text) {

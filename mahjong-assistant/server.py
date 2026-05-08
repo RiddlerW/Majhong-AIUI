@@ -2,11 +2,17 @@ import http.server
 import json
 import os
 import sys
+import threading
+import uuid
+import time
 
 import requests
 
 PORT = 8080
 MINIMAX_API_HOST = 'https://api.minimaxi.com'
+
+jobs = {}
+jobs_lock = threading.Lock()
 
 class MahjongProxyHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -21,6 +27,12 @@ class MahjongProxyHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.end_headers()
+
+    def do_GET(self):
+        if self.path.startswith('/api/job/'):
+            self.handle_job_status()
+        else:
+            super().do_GET()
 
     def do_POST(self):
         if self.path == '/api/recognize':
@@ -55,11 +67,25 @@ class MahjongProxyHandler(http.server.SimpleHTTPRequestHandler):
         else:
             image_url = image_base64
 
+        job_id = str(uuid.uuid4())[:8]
+
+        with jobs_lock:
+            jobs[job_id] = {'status': 'processing', 'result': None, 'error': None, 'created': time.time()}
+
+        thread = threading.Thread(
+            target=self._call_minimax_api,
+            args=(job_id, api_key, image_url, prompt),
+            daemon=True
+        )
+        thread.start()
+
+        self.send_json_response(202, {'jobId': job_id, 'status': 'processing'})
+
+    def _call_minimax_api(self, job_id, api_key, image_url, prompt):
         payload = {
             'prompt': prompt,
             'image_url': image_url
         }
-
         headers = {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + api_key,
@@ -67,7 +93,6 @@ class MahjongProxyHandler(http.server.SimpleHTTPRequestHandler):
         }
 
         try:
-            last_exc = None
             for attempt in range(3):
                 try:
                     resp = requests.post(
@@ -78,41 +103,58 @@ class MahjongProxyHandler(http.server.SimpleHTTPRequestHandler):
                     )
                     break
                 except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
-                    last_exc = exc
-                    self.log_message('Attempt %d failed: %s', attempt + 1, str(exc)[:200])
+                    self.log_message('Job %s attempt %d failed: %s', job_id, attempt + 1, str(exc)[:200])
                     if attempt < 2:
-                        import time
                         time.sleep(2 * (attempt + 1))
             else:
-                self.send_json_response(504, {'error': 'Minimax API 多次重试后仍超时，请稍后重试'})
+                with jobs_lock:
+                    jobs[job_id] = {'status': 'error', 'result': None, 'error': 'Minimax API 多次重试后仍超时，请稍后重试', 'created': jobs[job_id]['created']}
                 return
 
-            self.log_message('Minimax API status: %d', resp.status_code)
+            self.log_message('Job %s API status: %d', job_id, resp.status_code)
 
             try:
                 resp_data = resp.json()
             except ValueError:
-                self.send_json_response(502, {
-                    'error': 'Minimax API 返回非JSON响应 (HTTP %d): %s' % (resp.status_code, resp.text[:200])
-                })
+                with jobs_lock:
+                    jobs[job_id] = {'status': 'error', 'result': None, 'error': 'Minimax API 返回非JSON响应 (HTTP %d)' % resp.status_code, 'created': jobs[job_id]['created']}
                 return
 
             base_resp = resp_data.get('base_resp', {})
             if base_resp.get('status_code') != 0:
-                self.send_json_response(502, {
-                    'error': 'Minimax API 错误: ' + base_resp.get('status_msg', '未知错误')
-                })
+                with jobs_lock:
+                    jobs[job_id] = {'status': 'error', 'result': None, 'error': 'Minimax API 错误: ' + base_resp.get('status_msg', '未知错误'), 'created': jobs[job_id]['created']}
                 return
 
-            self.send_json_response(200, resp_data)
+            with jobs_lock:
+                jobs[job_id] = {'status': 'done', 'result': resp_data, 'error': None, 'created': jobs[job_id]['created']}
 
-        except requests.exceptions.Timeout:
-            self.send_json_response(504, {'error': 'Minimax API 请求超时，请重试'})
-        except requests.exceptions.ConnectionError as e:
-            self.send_json_response(502, {'error': '无法连接 Minimax API: ' + str(e)[:200]})
         except Exception as e:
-            self.log_message('Unexpected error: %s', str(e))
-            self.send_json_response(500, {'error': '服务器错误: ' + str(e)[:200]})
+            self.log_message('Job %s unexpected error: %s', job_id, str(e)[:200])
+            with jobs_lock:
+                jobs[job_id] = {'status': 'error', 'result': None, 'error': '服务器错误: ' + str(e)[:200], 'created': jobs[job_id]['created']}
+
+    def handle_job_status(self):
+        job_id = self.path.split('/api/job/')[-1].split('?')[0]
+
+        with jobs_lock:
+            job = jobs.get(job_id)
+
+        if not job:
+            self.send_json_response(404, {'error': '任务不存在'})
+            return
+
+        response = {'status': job['status']}
+        if job['status'] == 'done' and job['result']:
+            response['result'] = job['result']
+        elif job['status'] == 'error' and job['error']:
+            response['error'] = job['error']
+
+        self.send_json_response(200, response)
+
+        if job['status'] in ('done', 'error') and time.time() - job.get('created', 0) > 300:
+            with jobs_lock:
+                jobs.pop(job_id, None)
 
     def send_json_response(self, code, data):
         self.send_response(code)
