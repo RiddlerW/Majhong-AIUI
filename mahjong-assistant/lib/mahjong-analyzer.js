@@ -271,7 +271,11 @@
       }
     } else {
       analysis.mode = 'error';
-      analysis.errorDetail = '手牌' + handTiles.length + '张，期望' + listenHandCount + '张(听牌)或' + drawnHandCount + '张(打牌)';
+      var pengCount = pengTiles ? pengTiles.length : 0;
+      var gangCount = gangTiles ? gangTiles.length : 0;
+      var diff = handTiles.length - listenHandCount;
+      var diffText = diff > 0 ? '多了' + diff + '张' : '少了' + (-diff) + '张';
+      analysis.errorDetail = '碰牌' + pengCount + '组，杠牌' + gangCount + '组，期望手牌' + listenHandCount + '或' + drawnHandCount + '张，当前' + handTiles.length + '张，' + diffText;
     }
 
     return analysis;

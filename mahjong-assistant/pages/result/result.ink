@@ -70,7 +70,7 @@ export default {
 
     <view ink:if="{{mode === 'error'}}">
       <text class="title">⚠️ 牌数异常</text>
-      <text class="error-text">当前手牌 {{handCount}} 张，{{errorDetail || '数量异常'}}</text>
+      <text class="error-text">{{errorDetail || '数量异常'}}</text>
       <button class="action-btn primary" bindtap="nextRound">重新拍照</button>
     </view>
 
