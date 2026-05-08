@@ -252,12 +252,12 @@ body {
         <textarea id="manual-tiles-input" placeholder="一万 一万 三万 四万 五万 二条 四条 六条 七条 三筒 五筒 八筒 九筒" oninput="updateHandHint()"></textarea>
       </div>
       <div class="peng-input">
-        <label>碰牌（每组用逗号分隔，如：东风,东风,东风  三万,三万,三万）</label>
-        <textarea id="manual-peng-input" placeholder="东风,东风,东风  三万,三万,三万" oninput="updateHandHint()"></textarea>
+        <label>碰牌（输入牌名，空格分隔，如：八万 东风 三万）</label>
+        <textarea id="manual-peng-input" placeholder="八万 东风 三万" oninput="updateHandHint()"></textarea>
       </div>
       <div class="gang-input">
-        <label>杠牌（每组用逗号分隔，如：五筒,五筒,五筒,五筒）</label>
-        <textarea id="manual-gang-input" placeholder="五筒,五筒,五筒,五筒" oninput="updateHandHint()"></textarea>
+        <label>杠牌（输入牌名，空格分隔，如：五筒 九万）</label>
+        <textarea id="manual-gang-input" placeholder="五筒 九万" oninput="updateHandHint()"></textarea>
       </div>
       <button class="btn btn-primary btn-small" onclick="manualRecognize()">确认输入</button>
       <text class="status-text" id="camera-status">预览模式：手动输入或模拟拍照</text>
@@ -450,19 +450,16 @@ function parseTileNames(input) {
   return tiles;
 }
 
-function parsePengGangInput(input, expectedCount) {
+function parsePengGangInput(input, repeatCount) {
   if (!input) return [];
-  var groups = input.split(/\s+/);
+  var names = input.split(/[\s,，、]+/);
   var result = [];
-  for (var i = 0; i < groups.length; i++) {
-    var names = groups[i].split(/[,，]/);
-    var tileIdxs = [];
-    for (var j = 0; j < names.length; j++) {
-      var idx = MahjongConstants.nameToIndex(names[j]);
-      if (idx >= 0) tileIdxs.push(idx);
-    }
-    if (tileIdxs.length === expectedCount) {
-      result.push(tileIdxs);
+  for (var i = 0; i < names.length; i++) {
+    var idx = MahjongConstants.nameToIndex(names[i]);
+    if (idx >= 0) {
+      var group = [];
+      for (var j = 0; j < repeatCount; j++) group.push(idx);
+      result.push(group);
     }
   }
   return result;
