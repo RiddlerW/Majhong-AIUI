@@ -565,6 +565,12 @@ function recognizeImage() {
       prompt: prompt
     })
   }).then(function(res) {
+    var contentType = res.headers.get('content-type') || '';
+    if (contentType.indexOf('application/json') === -1) {
+      return res.text().then(function(text) {
+        throw new Error('服务器返回非JSON响应 (HTTP ' + res.status + '): ' + text.substring(0, 200));
+      });
+    }
     return res.json();
   }).then(function(data) {
     btn.disabled = false;

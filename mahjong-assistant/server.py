@@ -1,10 +1,9 @@
 import http.server
 import json
-import base64
-import urllib.request
-import urllib.error
 import os
 import sys
+
+import requests
 
 PORT = 8080
 MINIMAX_API_HOST = 'https://api.minimaxi.com'
@@ -56,44 +55,51 @@ class MahjongProxyHandler(http.server.SimpleHTTPRequestHandler):
         else:
             image_url = image_base64
 
-        payload = json.dumps({
+        payload = {
             'prompt': prompt,
             'image_url': image_url
-        }).encode('utf-8')
+        }
 
-        req = urllib.request.Request(
-            MINIMAX_API_HOST + '/v1/coding_plan/vlm',
-            data=payload,
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + api_key,
-                'MM-API-Source': 'MahjongAssistant'
-            },
-            method='POST'
-        )
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + api_key,
+            'MM-API-Source': 'MahjongAssistant'
+        }
 
         try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                resp_data = json.loads(resp.read().decode('utf-8'))
-                base_resp = resp_data.get('base_resp', {})
-                if base_resp.get('status_code') != 0:
-                    self.send_json_response(502, {
-                        'error': 'Minimax API 错误: ' + base_resp.get('status_msg', '未知错误')
-                    })
-                    return
-                self.send_json_response(200, resp_data)
-        except urllib.error.HTTPError as e:
-            error_body = e.read().decode('utf-8', errors='replace')
+            resp = requests.post(
+                MINIMAX_API_HOST + '/v1/coding_plan/vlm',
+                json=payload,
+                headers=headers,
+                timeout=90
+            )
+
+            self.log_message('Minimax API status: %d', resp.status_code)
+
             try:
-                error_data = json.loads(error_body)
-                msg = error_data.get('base_resp', {}).get('status_msg', error_body)
-            except json.JSONDecodeError:
-                msg = error_body
-            self.send_json_response(e.code, {'error': 'API 请求失败 (' + str(e.code) + '): ' + msg})
-        except urllib.error.URLError as e:
-            self.send_json_response(502, {'error': '网络错误: ' + str(e.reason)})
+                resp_data = resp.json()
+            except ValueError:
+                self.send_json_response(502, {
+                    'error': 'Minimax API 返回非JSON响应 (HTTP %d): %s' % (resp.status_code, resp.text[:200])
+                })
+                return
+
+            base_resp = resp_data.get('base_resp', {})
+            if base_resp.get('status_code') != 0:
+                self.send_json_response(502, {
+                    'error': 'Minimax API 错误: ' + base_resp.get('status_msg', '未知错误')
+                })
+                return
+
+            self.send_json_response(200, resp_data)
+
+        except requests.exceptions.Timeout:
+            self.send_json_response(504, {'error': 'Minimax API 请求超时，请重试'})
+        except requests.exceptions.ConnectionError as e:
+            self.send_json_response(502, {'error': '无法连接 Minimax API: ' + str(e)[:200]})
         except Exception as e:
-            self.send_json_response(500, {'error': '服务器错误: ' + str(e)})
+            self.log_message('Unexpected error: %s', str(e))
+            self.send_json_response(500, {'error': '服务器错误: ' + str(e)[:200]})
 
     def send_json_response(self, code, data):
         self.send_response(code)
@@ -105,7 +111,6 @@ class MahjongProxyHandler(http.server.SimpleHTTPRequestHandler):
         sys.stderr.write('[%s] %s\n' % (self.log_date_time_string(), format % args))
 
 if __name__ == '__main__':
-    import socket
     class ReusableHTTPServer(http.server.HTTPServer):
         allow_reuse_address = True
         allow_reuse_port = True
