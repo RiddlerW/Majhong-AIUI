@@ -502,19 +502,44 @@ function simulateCapture() {
 }
 
 var uploadedImageBase64 = '';
+var MAX_IMAGE_WIDTH = 1280;
+var IMAGE_QUALITY = 0.8;
+
+function compressImage(dataUrl, maxWidth, quality, callback) {
+  var img = new Image();
+  img.onload = function() {
+    var w = img.width;
+    var h = img.height;
+    if (w > maxWidth) {
+      h = Math.round(h * maxWidth / w);
+      w = maxWidth;
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    var compressed = canvas.toDataURL('image/jpeg', quality);
+    callback(compressed);
+  };
+  img.src = dataUrl;
+}
 
 function onImageSelected(event) {
   var file = event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
   reader.onload = function(e) {
-    uploadedImageBase64 = e.target.result;
-    var img = document.getElementById('camera-preview-img');
-    img.src = uploadedImageBase64;
-    img.style.display = 'block';
-    document.getElementById('camera-preview-hint').style.display = 'none';
-    document.getElementById('recognize-btn').disabled = false;
-    document.getElementById('camera-status').textContent = '图片已加载，点击"拍照识别"开始识别';
+    compressImage(e.target.result, MAX_IMAGE_WIDTH, IMAGE_QUALITY, function(compressed) {
+      uploadedImageBase64 = compressed;
+      var img = document.getElementById('camera-preview-img');
+      img.src = uploadedImageBase64;
+      img.style.display = 'block';
+      document.getElementById('camera-preview-hint').style.display = 'none';
+      document.getElementById('recognize-btn').disabled = false;
+      var sizeKB = Math.round(uploadedImageBase64.length * 3 / 4 / 1024);
+      document.getElementById('camera-status').textContent = '图片已加载（约' + sizeKB + 'KB），点击"拍照识别"开始识别';
+    });
   };
   reader.readAsDataURL(file);
 }

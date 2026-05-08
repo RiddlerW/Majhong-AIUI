@@ -67,12 +67,25 @@ class MahjongProxyHandler(http.server.SimpleHTTPRequestHandler):
         }
 
         try:
-            resp = requests.post(
-                MINIMAX_API_HOST + '/v1/coding_plan/vlm',
-                json=payload,
-                headers=headers,
-                timeout=90
-            )
+            last_exc = None
+            for attempt in range(3):
+                try:
+                    resp = requests.post(
+                        MINIMAX_API_HOST + '/v1/coding_plan/vlm',
+                        json=payload,
+                        headers=headers,
+                        timeout=120
+                    )
+                    break
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
+                    last_exc = exc
+                    self.log_message('Attempt %d failed: %s', attempt + 1, str(exc)[:200])
+                    if attempt < 2:
+                        import time
+                        time.sleep(2 * (attempt + 1))
+            else:
+                self.send_json_response(504, {'error': 'Minimax API 多次重试后仍超时，请稍后重试'})
+                return
 
             self.log_message('Minimax API status: %d', resp.status_code)
 
