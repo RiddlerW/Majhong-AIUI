@@ -237,8 +237,8 @@
     else if (dingque === 'tiao') analysis.dingqueName = '条';
     else if (dingque === 'tong') analysis.dingqueName = '筒';
 
-    var listenHandCount = 13 - meldCount * 2;
-    var drawnHandCount = 14 - meldCount * 2;
+    var listenHandCount = 13 - meldCount * 3;
+    var drawnHandCount = 14 - meldCount * 3;
 
     if (handTiles.length === listenHandCount) {
       if (currentShanten === -1) {

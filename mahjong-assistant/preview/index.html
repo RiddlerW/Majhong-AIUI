@@ -829,8 +829,8 @@ function updateHandHint() {
   var meldCount = pengCount + gangCount;
   var hint = document.getElementById('hand-expected-hint');
   if (meldCount > 0) {
-    var listenCount = 13 - meldCount * 2;
-    var drawnCount = 14 - meldCount * 2;
+    var listenCount = 13 - meldCount * 3;
+    var drawnCount = 14 - meldCount * 3;
     hint.textContent = '（有碰/杠时期望' + listenCount + '或' + drawnCount + '张）';
   } else {
     hint.textContent = '';
