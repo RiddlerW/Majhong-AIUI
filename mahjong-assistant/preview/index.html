@@ -213,6 +213,7 @@ body {
       <button class="nav-btn" onclick="showPage('camera')">拍照识别</button>
       <button class="nav-btn" onclick="showPage('confirm')">确认手牌</button>
       <button class="nav-btn" onclick="showPage('result')">分析结果</button>
+      <button class="nav-btn" onclick="showPage('settings')">设置</button>
     </div>
 
     <div id="page-index" class="page active">
@@ -246,22 +247,29 @@ body {
       <div style="width:100%;margin-bottom:8px;">
         <span id="camera-rule-tag" style="font-size:14px;color:rgba(64,255,94,0.6);background:rgba(64,255,94,0.1);padding:4px 12px;border-radius:8px;">血战到底</span>
       </div>
-      <div class="camera-area">📷 相机取景（预览模式）</div>
-      <div class="manual-input">
-        <label>手牌（用空格分隔，如：一万 一万 三万 四万 五万）<span id="hand-expected-hint" style="color:rgba(255,165,0,0.6);"></span></label>
-        <textarea id="manual-tiles-input" placeholder="一万 一万 三万 四万 五万 二条 四条 六条 七条 三筒 五筒 八筒 九筒" oninput="updateHandHint()"></textarea>
+      <div class="camera-area" id="camera-preview-area" onclick="document.getElementById('image-upload').click()" style="cursor:pointer;position:relative;overflow:hidden;">
+        <img id="camera-preview-img" style="max-width:100%;max-height:100%;display:none;object-fit:contain;" />
+        <span id="camera-preview-hint">📷 点击上传手牌照片</span>
       </div>
-      <div class="peng-input">
-        <label>碰牌（输入牌名，空格分隔，如：八万 东风 三万）</label>
-        <textarea id="manual-peng-input" placeholder="八万 东风 三万" oninput="updateHandHint()"></textarea>
+      <input type="file" id="image-upload" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="onImageSelected(event)" />
+      <button class="btn btn-primary btn-small" id="recognize-btn" onclick="recognizeImage()" disabled>拍照识别</button>
+      <text class="status-text" id="camera-status">请上传手牌照片进行识别</text>
+      <div style="width:100%;margin-top:12px;padding-top:12px;border-top:1px solid rgba(64,255,94,0.15);">
+        <text style="font-size:13px;color:rgba(64,255,94,0.4);display:block;margin-bottom:8px;">或手动输入：</text>
+        <div class="manual-input" style="margin-top:0;">
+          <label>手牌（用空格分隔，如：一万 一万 三万 四万 五万）<span id="hand-expected-hint" style="color:rgba(255,165,0,0.6);"></span></label>
+          <textarea id="manual-tiles-input" placeholder="一万 一万 三万 四万 五万 二条 四条 六条 七条 三筒 五筒 八筒 九筒" oninput="updateHandHint()"></textarea>
+        </div>
+        <div class="peng-input">
+          <label>碰牌（输入牌名，空格分隔，如：八万 东风 三万）</label>
+          <textarea id="manual-peng-input" placeholder="八万 东风 三万" oninput="updateHandHint()"></textarea>
+        </div>
+        <div class="gang-input">
+          <label>杠牌（输入牌名，空格分隔，如：五筒 九万）</label>
+          <textarea id="manual-gang-input" placeholder="五筒 九万" oninput="updateHandHint()"></textarea>
+        </div>
+        <button class="btn btn-secondary btn-small" onclick="manualRecognize()">手动确认输入</button>
       </div>
-      <div class="gang-input">
-        <label>杠牌（输入牌名，空格分隔，如：五筒 九万）</label>
-        <textarea id="manual-gang-input" placeholder="五筒 九万" oninput="updateHandHint()"></textarea>
-      </div>
-      <button class="btn btn-primary btn-small" onclick="manualRecognize()">确认输入</button>
-      <text class="status-text" id="camera-status">预览模式：手动输入或模拟拍照</text>
-      <button class="btn btn-secondary" onclick="simulateCapture()">模拟拍照识别</button>
     </div>
 
     <div id="page-confirm" class="page">
@@ -346,6 +354,21 @@ body {
         <button class="btn btn-secondary" onclick="showPage('index')">切换规则</button>
         <button class="btn btn-primary" onclick="showPage('camera')">下一轮拍照</button>
       </div>
+    </div>
+
+    <div id="page-settings" class="page">
+      <text class="title">⚙️ 设置</text>
+      <div class="section" style="padding:20px;border-radius:16px;border:2px solid rgba(64,255,94,0.2);background:rgba(64,255,94,0.05);margin-bottom:20px;width:100%;">
+        <text style="font-size:18px;color:#40FF5E;font-weight:bold;display:block;margin-bottom:16px;">OCR 识别服务</text>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:14px;color:rgba(64,255,94,0.6);">Minimax API Key</span>
+          <span id="key-status" style="font-size:14px;font-weight:bold;color:rgba(255,100,100,0.8);">未配置</span>
+        </div>
+        <input id="settings-api-key" type="password" placeholder="请输入 Minimax API Key" style="width:100%;height:44px;border-radius:10px;border:1px solid rgba(64,255,94,0.3);background:rgba(64,255,94,0.08);color:#40FF5E;font-size:14px;padding:0 12px;margin-bottom:8px;outline:none;" />
+        <text style="font-size:12px;color:rgba(64,255,94,0.4);display:block;margin-bottom:16px;">用于拍照识别麻将牌，Key 将保存在本地</text>
+        <button class="btn btn-primary btn-small" onclick="saveApiKey()">保存</button>
+      </div>
+      <button class="btn btn-secondary" onclick="showPage('index')">← 返回</button>
     </div>
   </div>
 
@@ -476,6 +499,224 @@ function simulateCapture() {
   appState.gangTiles = [];
   showConfirmPage();
   updateDebug();
+}
+
+var uploadedImageBase64 = '';
+var MAX_IMAGE_WIDTH = 1280;
+var IMAGE_QUALITY = 0.8;
+
+function compressImage(dataUrl, maxWidth, quality, callback) {
+  var img = new Image();
+  img.onload = function() {
+    var w = img.width;
+    var h = img.height;
+    if (w > maxWidth) {
+      h = Math.round(h * maxWidth / w);
+      w = maxWidth;
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    var compressed = canvas.toDataURL('image/jpeg', quality);
+    callback(compressed);
+  };
+  img.src = dataUrl;
+}
+
+function onImageSelected(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    compressImage(e.target.result, MAX_IMAGE_WIDTH, IMAGE_QUALITY, function(compressed) {
+      uploadedImageBase64 = compressed;
+      var img = document.getElementById('camera-preview-img');
+      img.src = uploadedImageBase64;
+      img.style.display = 'block';
+      document.getElementById('camera-preview-hint').style.display = 'none';
+      document.getElementById('recognize-btn').disabled = false;
+      var sizeKB = Math.round(uploadedImageBase64.length * 3 / 4 / 1024);
+      document.getElementById('camera-status').textContent = '图片已加载（约' + sizeKB + 'KB），点击"拍照识别"开始识别';
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function buildOcrPrompt() {
+  var prompt = '请识别图片中的麻将牌，注意区分以下三个区域：\n' +
+    '1. 手牌区：玩家手中竖立或叠放的牌（通常在下方中间位置）\n' +
+    '2. 碰牌区：桌面上翻开的3张相同的牌组（通常在手牌前方或侧面）\n' +
+    '3. 杠牌区：桌面上翻开的4张相同的牌组（与碰牌区位置类似，但多一张）\n\n' +
+    '按以下JSON格式输出，不要输出其他内容：\n' +
+    '{"hand_tiles": ["一万","一万","三万",...], ' +
+    '"peng_tiles": ["东风","三万"], ' +
+    '"gang_tiles": ["五筒"]}\n\n' +
+    '规则：\n' +
+    '- hand_tiles：手牌，每张单独列出\n' +
+    '- peng_tiles：碰出的牌，每组只需写一次牌名\n' +
+    '- gang_tiles：杠出的牌，每组只需写一次牌名\n' +
+    '- 如果某区域没有牌，对应字段填空数组[]\n' +
+    '- 如果无法区分碰/杠区域，将所有非手牌区域的牌按3张一组放入peng_tiles，4张一组放入gang_tiles\n' +
+    '- 如果完全无法区分区域，将所有牌放入hand_tiles';
+  return prompt;
+}
+
+function recognizeImage() {
+  var apiKey = document.getElementById('settings-api-key') ? document.getElementById('settings-api-key').value.trim() : '';
+  if (!apiKey) {
+    document.getElementById('camera-status').textContent = '❌ 请先在设置页面配置 Minimax API Key';
+    return;
+  }
+  if (!uploadedImageBase64) {
+    document.getElementById('camera-status').textContent = '❌ 请先上传手牌照片';
+    return;
+  }
+
+  var btn = document.getElementById('recognize-btn');
+  btn.disabled = true;
+  btn.textContent = '识别中...';
+  document.getElementById('camera-status').textContent = '正在提交识别请求...';
+
+  var prompt = buildOcrPrompt();
+
+  fetch('/api/recognize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      apiKey: apiKey,
+      image: uploadedImageBase64,
+      prompt: prompt
+    })
+  }).then(function(res) {
+    if (!res.ok) {
+      return res.text().then(function(text) {
+        throw new Error('提交失败 (HTTP ' + res.status + '): ' + text.substring(0, 200));
+      });
+    }
+    return res.json();
+  }).then(function(data) {
+    if (data.error) {
+      btn.disabled = false;
+      btn.textContent = '拍照识别';
+      document.getElementById('camera-status').textContent = '❌ ' + data.error;
+      return;
+    }
+    var jobId = data.jobId;
+    document.getElementById('camera-status').textContent = '识别中，请稍候...';
+    pollJobResult(jobId, btn);
+  }).catch(function(err) {
+    btn.disabled = false;
+    btn.textContent = '拍照识别';
+    document.getElementById('camera-status').textContent = '❌ 请求失败: ' + err.message;
+  });
+}
+
+function pollJobResult(jobId, btn) {
+  var dots = 0;
+  var pollTimer = setInterval(function() {
+    fetch('/api/job/' + jobId).then(function(res) {
+      if (!res.ok) {
+        return res.text().then(function(text) {
+          throw new Error('查询失败 (HTTP ' + res.status + ')');
+        });
+      }
+      return res.json();
+    }).then(function(data) {
+      if (data.status === 'processing') {
+        dots = (dots + 1) % 4;
+        var dotStr = new Array(dots + 1).join('.');
+        document.getElementById('camera-status').textContent = '正在识别中' + dotStr;
+        return;
+      }
+
+      clearInterval(pollTimer);
+      btn.disabled = false;
+      btn.textContent = '拍照识别';
+
+      if (data.status === 'error') {
+        document.getElementById('camera-status').textContent = '❌ ' + (data.error || '识别失败');
+        return;
+      }
+
+      if (data.status === 'done' && data.result) {
+        var content = data.result.content || '';
+        var parsed = extractTileJson(content);
+        if (!parsed) {
+          document.getElementById('camera-status').textContent = '❌ 无法解析识别结果，请重试或手动输入';
+          console.log('Raw API response:', content);
+          return;
+        }
+
+        var handTiles = parseTileArray(parsed.hand_tiles || []);
+        handTiles.sort(function(a, b) { return a - b; });
+        appState.handTiles = handTiles;
+        appState.pengTiles = parsePengFromOcr(parsed.peng_tiles || []);
+        appState.gangTiles = parseGangFromOcr(parsed.gang_tiles || []);
+
+        document.getElementById('camera-status').textContent = '✅ 识别完成';
+        showConfirmPage();
+        updateDebug();
+      }
+    }).catch(function(err) {
+      clearInterval(pollTimer);
+      btn.disabled = false;
+      btn.textContent = '拍照识别';
+      document.getElementById('camera-status').textContent = '❌ 轮询失败: ' + err.message;
+    });
+  }, 2000);
+}
+
+function extractTileJson(text) {
+  try {
+    var direct = JSON.parse(text);
+    if (direct.hand_tiles || direct.peng_tiles || direct.gang_tiles) return direct;
+  } catch(e) {}
+
+  var jsonMatch = text.match(/\{[\s\S]*"hand_tiles"[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch(e) {}
+  }
+
+  var codeMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeMatch) {
+    try {
+      var parsed = JSON.parse(codeMatch[1].trim());
+      if (parsed.hand_tiles || parsed.peng_tiles || parsed.gang_tiles) return parsed;
+    } catch(e) {}
+  }
+
+  return null;
+}
+
+function parseTileArray(names) {
+  var tiles = [];
+  for (var i = 0; i < names.length; i++) {
+    var idx = MahjongConstants.nameToIndex(names[i]);
+    if (idx >= 0) tiles.push(idx);
+  }
+  return tiles;
+}
+
+function parsePengFromOcr(names) {
+  var result = [];
+  for (var i = 0; i < names.length; i++) {
+    var idx = MahjongConstants.nameToIndex(names[i]);
+    if (idx >= 0) result.push([idx, idx, idx]);
+  }
+  return result;
+}
+
+function parseGangFromOcr(names) {
+  var result = [];
+  for (var i = 0; i < names.length; i++) {
+    var idx = MahjongConstants.nameToIndex(names[i]);
+    if (idx >= 0) result.push([idx, idx, idx, idx]);
+  }
+  return result;
 }
 
 function showConfirmPage() {
@@ -793,7 +1034,7 @@ function showPage(name) {
   var target = document.getElementById('page-' + name);
   if (target) target.classList.add('active');
   var navBtns = document.querySelectorAll('.nav-btn');
-  var pageNames = ['index', 'camera', 'confirm', 'result'];
+  var pageNames = ['index', 'camera', 'confirm', 'result', 'settings'];
   for (var i = 0; i < navBtns.length; i++) {
     navBtns[i].classList.toggle('active', pageNames[i] === name);
   }
@@ -839,6 +1080,33 @@ function updateHandHint() {
 
 renderRuleList();
 updateDebug();
+loadApiKey();
+
+function saveApiKey() {
+  var key = document.getElementById('settings-api-key').value.trim();
+  var statusEl = document.getElementById('key-status');
+  if (!key) {
+    statusEl.textContent = '未配置';
+    statusEl.style.color = 'rgba(255,100,100,0.8)';
+    localStorage.removeItem('minimaxApiKey');
+    return;
+  }
+  localStorage.setItem('minimaxApiKey', key);
+  statusEl.textContent = '已配置';
+  statusEl.style.color = 'rgba(64,255,94,0.8)';
+  alert('API Key 已保存');
+}
+
+function loadApiKey() {
+  var key = localStorage.getItem('minimaxApiKey') || '';
+  var input = document.getElementById('settings-api-key');
+  var statusEl = document.getElementById('key-status');
+  if (key) {
+    input.value = key;
+    statusEl.textContent = '已配置';
+    statusEl.style.color = 'rgba(64,255,94,0.8)';
+  }
+}
 </script>
 </body>
 </html>

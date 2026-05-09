@@ -95,6 +95,9 @@ export default {
   },
   backToRule() {
     this.setData({ step: 'rule' });
+  },
+  goToSettings() {
+    wx.navigateTo({ url: '/pages/settings/index' });
   }
 }
 </script>
@@ -111,6 +114,7 @@ export default {
         </view>
       </view>
       <button class="start-btn" bindtap="nextStep">确认开始</button>
+      <button class="settings-btn" bindtap="goToSettings">⚙️ 设置</button>
     </view>
 
     <view ink:if="{{step === 'dingque'}}">
@@ -230,6 +234,17 @@ export default {
   background-color: rgba(64, 255, 94, 0.1);
   color: #40FF5E;
   font-size: 16px;
+  text-align: center;
+  line-height: 44px;
+}
+.settings-btn {
+  margin-top: 12px;
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  background-color: rgba(64, 255, 94, 0.1);
+  color: rgba(64, 255, 94, 0.7);
+  font-size: 14px;
   text-align: center;
   line-height: 44px;
 }
