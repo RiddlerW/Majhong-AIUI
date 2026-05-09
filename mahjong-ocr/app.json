@@ -10,7 +10,6 @@
     }
   },
   "requiredPermissions": {
-    "camera": true,
     "network": true
   }
 }
