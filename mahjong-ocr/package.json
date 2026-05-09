@@ -1,8 +1,7 @@
 {
-  "name": "mahjong-ocr",
+  "name": "test-official",
   "version": "1.0.0",
-  "description": "麻将牌面视觉识别AIUI智能体",
+  "description": "A JSUI Agent project",
   "main": "app.js",
-  "author": "MahjongOCR",
-  "license": "MIT"
+  "dependencies": {}
 }

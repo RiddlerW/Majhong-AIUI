@@ -51,13 +51,10 @@ export default {
 <style>
 .container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  width: 480px;
-  height: 160px;
-  background-color: #000;
-  box-sizing: border-box;
-  padding: 12px;
+  justify-content: center;
+  height: 100vh;
 }
 
 .card {
@@ -65,7 +62,6 @@ export default {
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 100%;
   border: 2px solid #40FF5E;
   border-radius: 12px;
   padding: 20px;
@@ -74,15 +70,15 @@ export default {
 }
 
 .result-text {
-  font-size: 20px;
   color: #40FF5E;
+  font-size: 20px;
   font-weight: bold;
   line-height: 28px;
   text-align: center;
 }
 
 .hint-text {
-  font-size: 18px;
   color: rgba(64, 255, 94, 0.4);
+  font-size: 18px;
 }
 </style>
